@@ -1,4 +1,7 @@
 /* eslint-disable no-undef */
+const https = require('https')
+const fs = require('fs')
+
 var express = require("express")
 var path = require("path")
 var app = express()
@@ -17,8 +20,15 @@ app.use(compression())
 // Serve the static files from the React app
 app.use(express.static(path.join(__dirname, "/build")))
 
-var listener = app.listen(7080, function () {
+var listener = app.listen(7060, function () {
   console.log("Your app is listening on port " + listener.address().port)
+})
+
+https.createServer({
+  key: fs.readFileSync('server.key'),
+  cert: fs.readFileSync('server.cert')
+}, app).listen(7080, () => {
+  console.log('Listening...')
 })
 
 app.get("/", (req, res) => {
@@ -210,98 +220,16 @@ app.post("/savetemplate", async function (req, res) {
   res.send(requestsWeOwn)
 })
 
-app.get("/cascadeall", async function (req, res) {
-  // ne var ne yok temizler
-  let recover = await db.fetch("allRequests")
-  if (recover === null) {
-    res.send(false)
-  } else {
-    await db.set("recover", recover)
-    await db.delete("allRequests")
-    res.send(true)
-  }
-})
-
-app.get("/recover", async function (req, res) {
-  // returns to the backup after cascade operation
-  let recover = await db.fetch("recover")
-  if (recover === null) {
-    res.send(false)
-  } else {
-    await db.set("allRequests", recover)
-    await db.delete("recover")
-    res.send(true)
-  }
-})
-
-app.get("/mocktail/:endpoint", async function (req, res) {
-  // validate ?
-  let potentialResponse = { status: "404 endpoint does not exist." }
-  let vals = await db.fetch("allRequests")
-  for (let index = 0; index < vals.length; index++) {
-    if (
-      vals[index].method === "get" &&
-      vals[index].endpoint === req.params.endpoint
-    ) {
-      potentialResponse = vals[index].response
-      potentialResponse.status = "success"
-    }
-  }
-  res.send(potentialResponse)
-})
-
-// shallowly checks the request body
-app.post("/mocktail/:endpoint", async function (req, res) {
-  let potentialResponse = { status: "404 endpoint does not exist." }
-  let vals = await db.fetch("allRequests")
-  for (let index = 0; index < vals.length; index++) {
-    if (
-      vals[index].method === "post" &&
-      vals[index].endpoint === req.params.endpoint
-    ) {
-      const incomingRequestKeys = Object.keys(req.body.body)
-      const templateRequestKeys = Object.keys(vals[index].request)
-      potentialResponse = vals[index].request
-      potentialResponse.status = "success"
-
-      if (incomingRequestKeys.length === templateRequestKeys.length) {
-        for (let k = 0; k < incomingRequestKeys.length; k++) {
-          if (incomingRequestKeys[k] !== templateRequestKeys[k]) {
-            potentialResponse = {
-              status:
-                "Your request body does not match your request template. There might be a typo or irrelevant item/object in your request",
-            }
-            break
-          }
-        }
-      } else {
-        potentialResponse = {
-          status:
-            "The number of keys in your request does not match your template. You are sending extra or less data.",
-        }
-      }
-    }
-  }
-  res.send(potentialResponse)
-})
-
-app.get("/delete/:endpointkey", async function (req, res) {
-  let potentialResponse = { status: "Could not delete." }
-  let requestsWeOwn = await db.fetch("allRequests")
-  for (let index = 0; index < requestsWeOwn.length; index++) {
-    if (requestsWeOwn[index].key === req.params.endpointkey) {
-      console.log(requestsWeOwn)
-      requestsWeOwn.splice(index, 1)
-      console.log(requestsWeOwn)
-      await db.set("allRequests", requestsWeOwn)
-      potentialResponse = { status: "success" }
-    }
-  }
-  res.send(potentialResponse)
-})
 
 app.get("/client.ipa", async function (req, res) {
   var file = path.join(__dirname, "/cli/Client.ipa")
- 
-  res.sendFile(file)
+
+  res.set('Content-Type', 'application/octet-stream');
+  res.download(file);
 })
+
+app.get('/manifest.plist', function (req, res) {
+  res.setHeader('content-type', 'text/xml');
+  var file = path.join(__dirname, "/cli/manifest.plist")
+  res.download(file);
+});
