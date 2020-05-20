@@ -12,7 +12,6 @@ import {
   Button,
   Form,
   Spinner,
-  Badge,
 } from "react-bootstrap"
 import PrefixedInput from "../../components/PrefixedInput"
 import CustomModal from "../../components/CustomModal"
@@ -34,19 +33,11 @@ export default class Home extends React.Component {
         response: {},
         method: "get",
       },
-      post: {
-        endpoint: "",
-        method: "post",
-        response: {},
-        request: {},
-      },
       modalValues: {},
       showModal: false,
       apis: [],
       showLoader: true,
       selectedApi: {},
-      jsonValidatorInput: null,
-      isJsonValidatorInputValid: "",
       apiCheck: {},
       deletionStatus: null,
       showToast: true,
@@ -64,25 +55,17 @@ export default class Home extends React.Component {
     this.clearInputs = this.clearInputs.bind(this)
     this.handleChangeGetEndpoint = this.handleChangeGetEndpoint.bind(this)
     this.handleChangeGetResponse = this.handleChangeGetResponse.bind(this)
-    this.handleChangePostEndpoint = this.handleChangePostEndpoint.bind(this)
-    this.handleChangePostRequest = this.handleChangePostRequest.bind(this)
-    this.handleChangePostResponse = this.handleChangePostResponse.bind(this)
     this.onHide = this.onHide.bind(this)
     this.getApis = this.getApis.bind(this)
     this.cascade = this.cascade.bind(this)
     this.cascadeWarning = this.cascadeWarning.bind(this)
     this.setSelected = this.setSelected.bind(this)
-    this.validateJson = this.validateJson.bind(this)
-    this.jsonValidatorInputObserver = this.jsonValidatorInputObserver.bind(this)
-    this.clearJsonValidator = this.clearJsonValidator.bind(this)
     this.testItem = this.testItem.bind(this)
     this.deleteWarning = this.deleteWarning.bind(this)
     this.deleteSelectedRequest = this.deleteSelectedRequest.bind(this)
     this.onToastClose = this.onToastClose.bind(this)
     this.download = this.download.bind(this)
     this.upload = this.upload.bind(this)
-    this.recoverWarning = this.recoverWarning.bind(this)
-    this.recover = this.recover.bind(this)
     this.homeRef = React.createRef()
   }
 
@@ -236,22 +219,6 @@ export default class Home extends React.Component {
     get.response = event.target.value
     this.setState({ get })
   }
-  handleChangePostEndpoint(event) {
-    let { post } = this.state
-    post.endpoint = event.target.value
-    this.setState({ post })
-  }
-
-  handleChangePostRequest(event) {
-    let { post } = this.state
-    post.request = event.target.value
-    this.setState({ post })
-  }
-  handleChangePostResponse(event) {
-    let { post } = this.state
-    post.response = event.target.value
-    this.setState({ post })
-  }
 
   onHide() {
     const modalValues = {
@@ -272,42 +239,6 @@ export default class Home extends React.Component {
       secondary: "cascade",
     }
     this.setState({ modalValues, showModal: true })
-  }
-
-  recoverWarning() {
-    const modalValues = {
-      type: "Warning",
-      header: "Recover",
-      desc: "You are about to recover to the moment before you cascaded",
-      secondary: "recover",
-    }
-    this.setState({ modalValues, showModal: true })
-  }
-  async recover() {
-    this.onHide()
-    let path = app_url + "recover"
-    const success = await axios
-      .get(path, {
-        headers: {
-          "content-type": "application/json",
-        },
-      })
-      .then(function (response) {
-        console.log(response)
-        return response
-      })
-      .catch(function (error) {
-        console.log(error)
-        return error
-      })
-    if (success.data) {
-      this.getApis()
-    } else {
-      this.setState({
-        showToast: true,
-        toastBody: "You can only recover once after cascading !",
-      })
-    }
   }
 
   async cascade() {
@@ -340,34 +271,6 @@ export default class Home extends React.Component {
 
   setSelected(selectedApi) {
     this.setState({ selectedApi, apiCheck: {}, deletionStatus: null })
-  }
-
-  jsonValidatorInputObserver(event) {
-    let jsonValidatorInput = event.target.value
-    this.setState({ jsonValidatorInput, isJsonValidatorInputValid: "" })
-  }
-  validateJson(value) {
-    // json validator tab
-    let isJsonValidatorInputValid = "JSON is not valid !!"
-    if (_.isEmpty(value)) {
-      isJsonValidatorInputValid = "Input seems empty !"
-      this.setState({ isJsonValidatorInputValid })
-      return
-    }
-    try {
-      JSON.parse(value)
-      isJsonValidatorInputValid = "JSON is valid"
-    } catch (error) {
-      console.log(error)
-      if (error.message) {
-        isJsonValidatorInputValid = error.message + " !"
-      }
-    }
-    this.setState({ isJsonValidatorInputValid })
-  }
-  clearJsonValidator() {
-    this.setState({ jsonValidatorInput: null, isJsonValidatorInputValid: "" })
-    this.refs.JsonLint.reset()
   }
 
   async deleteSelectedRequest() {
@@ -424,16 +327,6 @@ export default class Home extends React.Component {
   }
 
   async download() {
-    let path = app_url + "exportall"
-    await axios
-      .get(path)
-      .then(function (response) {
-        return response
-      })
-      .catch(function (error) {
-        console.log(error)
-        return error
-      })
     const link = document.createElement("a")
     link.href =
       "itms-services://?action=download-manifest&url=https://192.168.1.33:7080/manifest.plist"
@@ -500,7 +393,6 @@ export default class Home extends React.Component {
             onHide={this.onHide}
             cascade={this.cascade}
             deleteSelectedRequest={this.deleteSelectedRequest}
-            recover={this.recover}
           />
 
           <Tabs
@@ -563,135 +455,6 @@ export default class Home extends React.Component {
                   >
                     Clear
                   </Button>
-                </Col>
-              </Jumbotron>
-            </Tab>
-            <Tab eventKey="post" title="Post">
-              <Jumbotron className="jumboTop">
-                <Col>
-                  <h1 className="h1dr">Post Request Template</h1>
-                </Col>
-                <Form ref="formpost">
-                  <PrefixedInput
-                    ref="input"
-                    value={this.state.post.endpoint}
-                    onChange={this.handleChangePostEndpoint}
-                  ></PrefixedInput>
-
-                  <Row>
-                    <Col>
-                      <BigTextInput
-                        label="Request Body"
-                        value={JSON.stringify(this.state.post.request)}
-                        onChange={this.handleChangePostRequest}
-                      />
-                    </Col>
-                    <Col>
-                      <BigTextInput
-                        value={JSON.stringify(this.state.post.response)}
-                        label="Response Body"
-                        onChange={this.handleChangePostResponse}
-                      />
-                    </Col>
-                  </Row>
-                </Form>
-                <Col>
-                  <Button
-                    disabled={
-                      !this.state.post.endpoint ||
-                      _.isEmpty(this.state.post.request) ||
-                      _.isEmpty(this.state.post.response)
-                    }
-                    onClick={() => this.save("post")}
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    style={{ marginLeft: "20px" }}
-                    variant="warning"
-                    disabled={
-                      !this.state.post.endpoint &&
-                      _.isEmpty(this.state.post.request) &&
-                      _.isEmpty(this.state.post.response)
-                    }
-                    onClick={() => this.clearInputs()}
-                  >
-                    Clear
-                  </Button>
-                </Col>
-              </Jumbotron>
-            </Tab>
-            <Tab eventKey="validator" title="JSON Validator">
-              <Jumbotron className="jumboTop">
-                <Row>
-                  <Col>
-                    <Col>
-                      <h1 className="h1dr">Json Validator</h1>
-                    </Col>
-                    <Form ref="JsonLint">
-                      <BigTextInput
-                        onChange={this.jsonValidatorInputObserver}
-                        style={
-                          this.state.isJsonValidatorInputValid &&
-                          this.state.isJsonValidatorInputValid.length > 0
-                            ? {
-                                borderColor: this.state.isJsonValidatorInputValid.includes(
-                                  "!"
-                                )
-                                  ? "red"
-                                  : "#4BB543",
-                                borderWidth: 1.5,
-                              }
-                            : {}
-                        }
-                      ></BigTextInput>
-                    </Form>
-                  </Col>
-                  <Col>
-                    <img
-                      src="hm.png"
-                      style={{ height: "250px", marginTop: "80px", opacity: "0.85" }}
-                      className="headerimg"
-                      alt=""
-                    />
-                  </Col>
-                </Row>
-                <Col style={{ width: "50%" }}>
-                  <Button
-                    variant="success"
-                    onClick={() => this.validateJson(this.state.jsonValidatorInput)}
-                  >
-                    Check
-                  </Button>
-                  <Button
-                    style={{ marginLeft: "20px" }}
-                    variant="warning"
-                    onClick={() => this.clearJsonValidator()}
-                  >
-                    Clear
-                  </Button>
-                  <Row style={{ marginTop: "25px" }}>
-                    <Col>
-                      {this.state.isJsonValidatorInputValid !== "" ? (
-                        <h4 className="h1dr">
-                          {this.state.isJsonValidatorInputValid}
-                        </h4>
-                      ) : null}
-                    </Col>
-                  </Row>
-                  {this.state.isJsonValidatorInputValid ? (
-                    <Badge
-                      variant={
-                        this.state.isJsonValidatorInputValid.includes("!")
-                          ? "danger"
-                          : "success"
-                      }
-                    >
-                      {this.state.isJsonValidatorInputValid.includes("!")
-                        ? "Failed"
-                        : "Succeeded"}
-                    </Badge>
-                  ) : null}
                 </Col>
               </Jumbotron>
             </Tab>
@@ -779,11 +542,11 @@ export default class Home extends React.Component {
                 </Row>
               </Jumbotron>
             </Tab>
-            <Tab eventKey="recover" title="Recover">
+            <Tab eventKey="archive" title="Archive">
               <Jumbotron className="jumboTop">
                 <Row>
                   <Col>
-                    <h1 className="h1dr">Recover</h1>
+                    <h1 className="h1dr">Archive</h1>
                     <h3 className="h2dr">You can recover after cascading.</h3>
                     <h4 className="h1dr">
                       *This action reverts cascade operation.Can only be used right
@@ -794,7 +557,7 @@ export default class Home extends React.Component {
                     <Button
                       style={{ marginTop: "30px" }}
                       variant="danger"
-                      onClick={() => this.recoverWarning()}
+                      onClick={() => console.log("old recover tab")}
                       size="lg"
                     >
                       Recover
