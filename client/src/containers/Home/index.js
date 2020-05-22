@@ -13,9 +13,7 @@ import {
   Form,
   Spinner,
 } from "react-bootstrap"
-import PrefixedInput from "../../components/PrefixedInput"
 import CustomModal from "../../components/CustomModal"
-import BigTextInput from "../../components/BigTextInput"
 import MockList from "../../components/MockList"
 import MockItemDetail from "../../components/MockItemDetail"
 import CustomToast from "../../components/CustomToast"
@@ -52,9 +50,6 @@ export default class Home extends React.Component {
       secondary: "",
     }
     this.save = this.save.bind(this)
-    this.clearInputs = this.clearInputs.bind(this)
-    this.handleChangeGetEndpoint = this.handleChangeGetEndpoint.bind(this)
-    this.handleChangeGetResponse = this.handleChangeGetResponse.bind(this)
     this.onHide = this.onHide.bind(this)
     this.getApis = this.getApis.bind(this)
     this.cascade = this.cascade.bind(this)
@@ -163,8 +158,6 @@ export default class Home extends React.Component {
   }
 
   validate(template) {
-    // const expression = /^(?:([A-Za-z]+):)?(\/{0,3})([0-9.\-A-Za-z]+) (?:: (\d +))?(?: \/([^?#]*))?(?:\?([^#]*))?(?:#(.*))?$/
-    // const regex = new RegExp(expression)
     try {
       template.endpoint = template.endpoint.toLocaleLowerCase("en-US")
       template.endpoint = template.endpoint.replace(/\s/g, "")
@@ -200,25 +193,6 @@ export default class Home extends React.Component {
     }
   }
 
-  clearInputs() {
-    this.refs.formget.reset()
-    this.refs.formpost.reset()
-    const get = { endpoint: "", method: "get", response: {} }
-    const post = { endpoint: "", method: "post", response: {}, request: {} }
-    this.setState({ get, post, selectedApi: {} })
-  }
-
-  handleChangeGetEndpoint(event) {
-    let { get } = this.state
-    get.endpoint = event.target.value
-    this.setState({ get })
-  }
-
-  handleChangeGetResponse(event) {
-    let { get } = this.state
-    get.response = event.target.value
-    this.setState({ get })
-  }
 
   onHide() {
     const modalValues = {
@@ -337,24 +311,14 @@ export default class Home extends React.Component {
   }
 
   async upload(fileValue) {
-    let convertedFile
-    try {
-      convertedFile = JSON.parse(fileValue)
-    } catch (error) {
-      convertedFile = false
-      console.log(error)
-    }
-    if (!convertedFile) {
-      this.setState({
-        showToast: true,
-        toastBody: "Please only upload single json file !",
-      })
-      return
-    }
+    let bodyFormData = new FormData()
+    bodyFormData.set("userName", "Fred")
+    bodyFormData.append("app", fileValue)
+
     let path = app_url + "upload"
     const up = await axios
-      .post(path, {
-        body: convertedFile,
+      .post(path, bodyFormData, {
+        headers: { "content-type": "multipart/form-data" },
       })
       .then(function (response) {
         console.log(response)
@@ -400,62 +364,16 @@ export default class Home extends React.Component {
             activeKey={this.state.activeKey}
             onSelect={(key) => this.setState({ tab: key })}
           >
-            <Tab eventKey="get" title="Get">
+            <Tab eventKey="upload" title="Upload">
               <Jumbotron className="jumboTop">
-                <Form ref="formget">
-                  <Row>
-                    <Col>
-                      <Col>
-                        <h1 className="h1dr">Get Request Template</h1>
-                      </Col>
-                      <PrefixedInput
-                        ref="input"
-                        value={this.state.get.endpoint}
-                        onChange={this.handleChangeGetEndpoint}
-                      ></PrefixedInput>
-
-                      <BigTextInput
-                        label="Response Body"
-                        value={JSON.stringify(this.state.get.response)}
-                        onChange={this.handleChangeGetResponse}
-                        style={
-                          this.state.isgetResponseBodyValid &&
-                          this.state.isgetResponseBodyValid.length > 0
-                            ? {
-                                borderColor: this.state.isgetResponseBodyValid.includes(
-                                  "!"
-                                )
-                                  ? "red"
-                                  : "#4BB543",
-                                borderWidth: 1.5,
-                              }
-                            : {}
-                        }
-                      />
-                    </Col>
+                <Row>
+                  <Col>
                     <TipsNTricks tip={this.state.tip} />
-                  </Row>
-                </Form>
-                <Col>
-                  <Button
-                    disabled={
-                      !this.state.get.endpoint || _.isEmpty(this.state.get.response)
-                    }
-                    onClick={() => this.save("get")}
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    disabled={
-                      !this.state.get.endpoint && _.isEmpty(this.state.get.response)
-                    }
-                    style={{ marginLeft: "20px" }}
-                    variant="warning"
-                    onClick={this.clearInputs}
-                  >
-                    Clear
-                  </Button>
-                </Col>
+                  </Col>
+                  <Col>
+                    <CustomDropzone upload={this.upload} />
+                  </Col>
+                </Row>
               </Jumbotron>
             </Tab>
             <Tab eventKey="export" title="Export">
@@ -491,49 +409,26 @@ export default class Home extends React.Component {
                 </Row>
               </Jumbotron>
             </Tab>
-            <Tab eventKey="import" title="Import">
+            <Tab eventKey="secret" title="Secret">
               <Jumbotron className="jumboTop">
                 <Row>
                   <Col>
-                    <h1 className="h1dr">Import</h1>
-                    <h3 className="h2dr">
-                      You can import multiple endpoints from file exported by
-                      mocktail.{" "}
-                    </h3>
-                    <h4 className="h1dr">
-                      *You can create a json file by yourself but there are many
-                      rules, I would not want you to waste your time with filling a
-                      json file with rules.{" "}
-                    </h4>
-                  </Col>
-                  <Col>
-                    <CustomDropzone upload={this.upload} />
-                  </Col>
-                </Row>
-              </Jumbotron>
-            </Tab>
-            <Tab eventKey="cascade" title="Cascade">
-              <Jumbotron className="jumboTop">
-                <Row>
-                  <Col>
-                    <h1 className="h1dr">Cascade</h1>
-                    <h3 className="h2dr">You can always make a clean start</h3>
-                    <h4 className="h1dr">
-                      *This action can be reverted from Recover tab
-                    </h4>
+                    <h1 className="h1dr">Secret</h1>
+                    <h3 className="h2dr">Change the secret to deactivate previous download links.</h3>
+                    <h4 className="h1dr">*This action is irreversable</h4>
 
                     <Button
                       style={{ marginTop: "30px" }}
                       variant="danger"
-                      onClick={() => this.cascadeWarning()}
+                      onClick={() => console.log("old recover tab")}
                       size="lg"
                     >
-                      Cascade
+                      Recover
                     </Button>
                   </Col>
                   <Col>
                     <img
-                      src="exp.png"
+                      src="he.png"
                       style={{ height: "250px", marginTop: "80px", opacity: "0.85" }}
                       className="headerimg"
                       alt=""
@@ -574,6 +469,36 @@ export default class Home extends React.Component {
                 </Row>
               </Jumbotron>
             </Tab>
+            <Tab eventKey="cascade" title="Cascade">
+              <Jumbotron className="jumboTop">
+                <Row>
+                  <Col>
+                    <h1 className="h1dr">Cascade</h1>
+                    <h3 className="h2dr">You can always make a clean start</h3>
+                    <h4 className="h1dr">
+                      *This action can be reverted from Recover tab
+                    </h4>
+
+                    <Button
+                      style={{ marginTop: "30px" }}
+                      variant="danger"
+                      onClick={() => this.cascadeWarning()}
+                      size="lg"
+                    >
+                      Cascade
+                    </Button>
+                  </Col>
+                  <Col>
+                    <img
+                      src="exp.png"
+                      style={{ height: "250px", marginTop: "80px", opacity: "0.85" }}
+                      className="headerimg"
+                      alt=""
+                    />
+                  </Col>
+                </Row>
+              </Jumbotron>
+            </Tab>
           </Tabs>
 
           <Row>
@@ -582,7 +507,7 @@ export default class Home extends React.Component {
                 <Col>
                   <h1 className="h1dr">
                     {" "}
-                    Total Requests{" "}
+                    Total Apps{" "}
                     {this.state.apis && this.state.apis.data
                       ? this.state.apis.data.length
                       : 0}{" "}

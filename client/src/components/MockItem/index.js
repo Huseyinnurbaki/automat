@@ -4,14 +4,14 @@ import FormControl from "react-bootstrap/FormControl"
 import Button from "react-bootstrap/Button"
 
 const MockItem = (props) => {
-  let method = props.data.method.toString().toUpperCase()
+  // let method = props.data.method.toString().toUpperCase()
   let bgc = "orange"
-  if (method === "GET") {
-    bgc = "#17b027"
-    method = method + "  ."
-  }
-  let endpoint = '/' + props.data.endpoint
-  let copyEndpoint = "http://localhost:7080/mocktail/" + props.data.endpoint
+  // if (method === "GET") {
+  //   bgc = "#17b027"
+  //   method = method + "  ."
+  // }
+  let path = '/' + props.data.path
+  let copypath = "http://localhost:7080/mocktail/" + props.data.path
   return (
     <dt key={props.index}>
       <InputGroup className="mb-3">
@@ -20,19 +20,19 @@ const MockItem = (props) => {
             style={{ backgroundColor: bgc, color: "white", fontWeight: "600" }}
             id="basic-addon1"
           >
-            {method}
+            {props.originalname}
           </InputGroup.Text>
         </InputGroup.Prepend>
         <FormControl
-          placeholder={endpoint}
-          aria-label={endpoint}
+          placeholder={path}
+          aria-label={path}
           aria-describedby="basic-addon1"
           disabled
         />
         <InputGroup.Append>
           <Button
             onClick={() => {
-              navigator.clipboard.writeText(copyEndpoint)
+              navigator.clipboard.writeText(copypath)
             }}
             variant="outline-secondary"
           >

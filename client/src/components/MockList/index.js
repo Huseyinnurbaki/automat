@@ -19,7 +19,7 @@ export default function MockList(props) {
   useEffect(() => {
     const results = props.apis.data
       ? props.apis.data.filter((val) =>
-          val.endpoint.toLowerCase().includes(searchTerm)
+          val.originalname.toLowerCase().includes(searchTerm)
         )
       : undefined
     setApis(results)
@@ -32,7 +32,7 @@ export default function MockList(props) {
           <FormControl
             disabled={!displayedApis}
             type="text"
-            placeholder="Type only the endpoint.."
+            placeholder="Type application name or tag"
             className="mr-sm-2"
             onChange={searchHandler}
           />
