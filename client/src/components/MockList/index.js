@@ -47,7 +47,7 @@ export default function MockList(props) {
               ></MockItem>
             ))
           ) : (
-            <h3 className="header">There is no endpoint..</h3>
+            <h3 className="header">No application found..</h3>
           )}
         </div>
       </ListGroup>

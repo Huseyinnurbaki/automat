@@ -5,7 +5,9 @@ import Col from "react-bootstrap/cjs/Col"
 export default function CustomDropzone(props) {
   const onDrop = useCallback((acceptedFiles) => {
     acceptedFiles.forEach((file) => {
-      props.upload(file)
+      if (file.name.includes(".ipa") || file.name.includes(".apk")) {
+        props.upload(file)
+      }
     })
   }, [])
   const { getRootProps, getInputProps } = useDropzone({ onDrop })
@@ -24,7 +26,9 @@ export default function CustomDropzone(props) {
         className="headerimg"
         alt=""
       ></img>
-      <h3 className='h2dr' style={{ textAlign: 'center',paddingTop: '5px'}} >Drop or Click Here</h3>
+      <h3 className="h2dr" style={{ textAlign: "center", paddingTop: "5px" }}>
+        Drop or Click Here
+      </h3>
     </Col>
   )
 }

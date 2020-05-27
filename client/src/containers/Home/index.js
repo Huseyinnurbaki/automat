@@ -1,6 +1,5 @@
 import React from "react"
 import axios from "axios"
-import _ from "lodash"
 import { saveTemplate } from "../../requests"
 import {
   Jumbotron,
@@ -10,12 +9,11 @@ import {
   Row,
   Col,
   Button,
-  Form,
   Spinner,
 } from "react-bootstrap"
 import CustomModal from "../../components/CustomModal"
 import MockList from "../../components/MockList"
-import MockItemDetail from "../../components/MockItemDetail"
+import TestApplicationDetail from "../../components/TestApplicationDetail"
 import CustomToast from "../../components/CustomToast"
 import TipsNTricks from "../../components/TipsNTricks"
 import CustomDropzone from "../../components/CustomDropzone"
@@ -55,7 +53,6 @@ export default class Home extends React.Component {
     this.cascade = this.cascade.bind(this)
     this.cascadeWarning = this.cascadeWarning.bind(this)
     this.setSelected = this.setSelected.bind(this)
-    this.testItem = this.testItem.bind(this)
     this.deleteWarning = this.deleteWarning.bind(this)
     this.deleteSelectedRequest = this.deleteSelectedRequest.bind(this)
     this.onToastClose = this.onToastClose.bind(this)
@@ -115,48 +112,6 @@ export default class Home extends React.Component {
     }
   }
 
-  async testItem() {
-    let apiCheck
-
-    const endpoint = app_url + "mocktail/" + this.state.selectedApi.endpoint
-    if (this.state.selectedApi.method === "get") {
-      apiCheck = await axios
-        .get(endpoint, {
-          headers: {
-            "content-type": "application/json",
-          },
-        })
-        .then(function (response) {
-          console.log(response)
-          if (response.data === "") {
-            return {}
-          }
-          return response
-        })
-        .catch(function (error) {
-          console.log(error)
-          return {}
-        })
-    } else {
-      apiCheck = await axios
-        .post(endpoint, {
-          body: this.state.selectedApi.request,
-        })
-        .then(function (response) {
-          console.log(response)
-          if (response.data === "") {
-            return {}
-          }
-          return response
-        })
-        .catch(function (error) {
-          console.log(error)
-          return {}
-        })
-    }
-    this.setState({ apiCheck, deletionStatus: null })
-  }
-
   validate(template) {
     try {
       template.endpoint = template.endpoint.toLocaleLowerCase("en-US")
@@ -209,7 +164,7 @@ export default class Home extends React.Component {
       type: "Warning",
       header: "Cascade",
       desc:
-        "You are about to delete every template you added. Are you sure ? This can be reverted from recover tab",
+        "You are about to delete every application you added. Are you sure ? This cannot be reverted.",
       secondary: "cascade",
     }
     this.setState({ modalValues, showModal: true })
@@ -217,7 +172,7 @@ export default class Home extends React.Component {
 
   async cascade() {
     this.onHide()
-    let path = app_url + "cascadeall"
+    let path = app_url + "cascade"
     const success = await axios
       .get(path, {
         headers: {
@@ -248,7 +203,7 @@ export default class Home extends React.Component {
   }
 
   async deleteSelectedRequest() {
-    const endpoint = app_url + "delete/" + this.state.selectedApi.key
+    const endpoint = app_url + "delete/" + this.state.selectedApi.filename
 
     const deletionStatus = await axios
       .get(endpoint, {
@@ -476,7 +431,7 @@ export default class Home extends React.Component {
                     <h1 className="h1dr">Cascade</h1>
                     <h3 className="h2dr">You can always make a clean start</h3>
                     <h4 className="h1dr">
-                      *This action can be reverted from Recover tab
+                      *This action is irrevertable. Use with caution.
                     </h4>
 
                     <Button
@@ -533,12 +488,11 @@ export default class Home extends React.Component {
             </Col>
             <Col>
               <Jumbotron className="jumbos">
-                <MockItemDetail
+                <TestApplicationDetail
                   disabled
                   data={this.state.selectedApi}
                   deleteSelectedRequest={this.deleteWarning}
                   deletionStatus={this.state.deletionStatus}
-                  testItem={this.testItem}
                   apiCheck={this.state.apiCheck}
                 />
               </Jumbotron>

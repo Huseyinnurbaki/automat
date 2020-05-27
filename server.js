@@ -65,9 +65,26 @@ app.get("/cascade", async function (req, res) {
 })
 
 
+app.get("/delete/:appid", async function (req, res) {
+  let potentialResponse = { status: "Could not delete." }
+  let apps = await db.fetch("allApps")
+
+  for (let index = 0; index < apps.length; index++) {
+    if (apps[index].filename === req.params.appid) {
+      console.log(apps)
+      apps.splice(index, 1)
+      console.log(apps)
+      await db.set("allApps", apps)
+      potentialResponse = { status: "success" }
+    }
+  }
+  res.send(potentialResponse)
+})
+
+
 app.get("/client", async function (req, res) {
   // key konttrolu burada yapılacak
-  var file = path.join(__dirname, "/uploads/1590108105556-Client.ipa")
+  var file = path.join(__dirname, "/uploads/1590611656282-AlbarakaApp.ipa")
 
   res.set('Content-Type', 'application/octet-stream');
   res.download(file);
@@ -95,6 +112,7 @@ app.post('/upload', upload.single('app'), async function(req, res) {
     if(req.file) {
       newApp = req.file;
       newApp.downloaded = 0;
+      newApp.createDate = req.file.filename.substr(0, req.file.filename.indexOf('-')); 
       newApp.tags = [];
       apps.push(newApp);
       await db.set("allApps", apps)
@@ -110,10 +128,11 @@ app.post('/upload', upload.single('app'), async function(req, res) {
 
 app.get('/lista', async function (req, res) {
   //reading directory in synchronous way
-  let key = await db.fetch("secret")
-
-  var files = fs.readdirSync('./uploads');
-  res.json(key);
+  // let key = await db.fetch("secret")
+  // var files = fs.readdirSync('./uploads');
+  // res.json(key);
+  let key = await db.fetch("allApps")
+  res.send(key.length.toString());
 });
 
 
