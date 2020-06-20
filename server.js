@@ -82,18 +82,28 @@ app.get("/delete/:appid", async function (req, res) {
 })
 
 
-app.get("/client", async function (req, res) {
+app.get("/client/:appid", async function (req, res) {
   // key konttrolu burada yapılacak
-  var file = path.join(__dirname, "/uploads/1590611656282-AlbarakaApp.ipa")
+  var appdir = "/uploads/"+req.params.appid
+  var file = path.join(__dirname, appdir)
 
   res.set('Content-Type', 'application/octet-stream');
   res.download(file);
 })
 
-app.get('/manifest.plist', function (req, res) {
-  res.setHeader('content-type', 'text/xml');
+app.get('/manifest/:appid', async function (req, res) {
+  var plist = require('simple-plist')
+
+  let apppath = "https://192.168.1.34:7080/client/" + req.params.appid;
   var file = path.join(__dirname, "/manifest.plist")
+  var data = plist.readFileSync(file)
+  console.log(JSON.stringify(data))
+  data.items[0].assets[0].url = apppath
+  plist.writeBinaryFileSync(file, data)
+
+  res.setHeader('content-type', 'text/xml');
   res.download(file);
+
 });
 
 app.post('/upload', upload.single('app'), async function(req, res) {

@@ -4,6 +4,11 @@ import MockItem from "../MockItem"
 import QRCode from "qrcode.react"
 
 const TestApplicationDetail = (props) => {
+  let appid =
+    "itms-services://?action=download-manifest&url=https://192.168.1.34:7080/manifest/" +
+    `${props.data.filename}`
+  console.log(appid)
+
   if (!props.data.originalname) {
     return (
       <Col style={{ minHeight: "400px" }}>
@@ -33,10 +38,7 @@ const TestApplicationDetail = (props) => {
       </Col>
 
       <Col>
-        <QRCode
-          size={200}
-          value="itms-services://?action=download-manifest&url=https://192.168.1.33:7080/manifest.plist"
-        />
+        <QRCode size={200} value={appid} />
         <Col></Col>
         <Button variant="danger" onClick={props.deleteSelectedRequest}>
           Delete

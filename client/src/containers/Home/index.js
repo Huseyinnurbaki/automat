@@ -256,9 +256,11 @@ export default class Home extends React.Component {
   }
 
   async download() {
+    const appid = this.state.selectedApi.path
     const link = document.createElement("a")
     link.href =
-      "itms-services://?action=download-manifest&url=https://192.168.1.33:7080/manifest.plist"
+      "itms-services://?action=download-manifest&url=https://192.168.1.34:7080/manifest/" +
+      appid
     link.download = "manifest.plist"
     document.body.appendChild(link)
     link.click()
